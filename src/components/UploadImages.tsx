@@ -1,5 +1,5 @@
 import { DragEvent, useState } from 'react';
-import { AspectRatio, Box, Center, Container, Flex } from '@chakra-ui/react';
+import { AspectRatio, Box, Flex } from '@chakra-ui/react';
 import { css } from '@emotion/react';
 import Image from 'next/image';
 
