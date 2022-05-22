@@ -2,6 +2,7 @@ import { DragEvent, useState } from 'react';
 import { AspectRatio, Box, Flex } from '@chakra-ui/react';
 import { css } from '@emotion/react';
 import Image from 'next/image';
+import { off } from 'process';
 
 const styles = {
   input: css`
@@ -22,6 +23,19 @@ export const UploadImages = (): JSX.Element => {
   const [images, setImages] = useState<ImageType[]>([]);
   const MAX_WIDTH = 300;
   const MAX_HEIGHT = 300;
+  const allowedExtensions = new Array('jpg', 'jpeg', 'png');
+
+  const getExtention = (filename: string) => {
+    var pos = filename.lastIndexOf('.');
+    if (pos === -1) return '';
+    return filename.slice(pos + 1);
+  };
+
+  const allowedExtention = (filename: string) => {
+    let ext = getExtention(filename).toLowerCase();
+    if (allowedExtensions.indexOf(ext) === -1) return false;
+    return true;
+  };
 
   const loadImage = (src: string) => {
     return new Promise((resolve, reject) => {
@@ -60,44 +74,51 @@ export const UploadImages = (): JSX.Element => {
 
     if (files && files.length > 0) {
       const existingFiles = images.map((f) => f.name);
-      files = files.filter((f) => !existingFiles.includes(f.name));
+      files = files.filter((f) => !existingFiles.includes(f.name) && allowedExtention(f.name));
+    }
+
+    if (files && files.length > 0) {
       files.map((f) => {
         const reader = new FileReader();
         // ref: https://qiita.com/rch850/items/33d6933b3c73e112c5b6
         reader.onload = (e: any) => {
           const base64 = e.target.result;
 
-          loadImage(base64).then((img: any) => {
-            let canvas = document.createElement('canvas');
-            let ctx = canvas.getContext('2d');
-            ctx?.drawImage(img, 0, 0);
+          loadImage(base64)
+            .then((img: any) => {
+              let canvas = document.createElement('canvas');
+              let ctx = canvas.getContext('2d');
+              ctx?.drawImage(img, 0, 0);
 
-            let width = img.width;
-            let height = img.height;
+              let width = img.width;
+              let height = img.height;
 
-            if (width > height && width > MAX_WIDTH) {
-              height *= MAX_WIDTH / width;
-              width = MAX_WIDTH;
-            } else if (width <= height && height > MAX_HEIGHT) {
-              width *= MAX_HEIGHT / height;
-              height = MAX_HEIGHT;
-            }
-            canvas.height = height;
-            canvas.width = width;
-            ctx = canvas.getContext('2d');
-            ctx?.drawImage(img, 0, 0, width, height);
+              if (width > height && width > MAX_WIDTH) {
+                height *= MAX_WIDTH / width;
+                width = MAX_WIDTH;
+              } else if (width <= height && height > MAX_HEIGHT) {
+                width *= MAX_HEIGHT / height;
+                height = MAX_HEIGHT;
+              }
+              canvas.height = height;
+              canvas.width = width;
+              ctx = canvas.getContext('2d');
+              ctx?.drawImage(img, 0, 0, width, height);
 
-            const data = canvas.toDataURL(f.type);
+              const data = canvas.toDataURL(f.type);
 
-            setImages(
-              images.concat([
-                {
-                  name: f.name,
-                  data: data,
-                },
-              ]),
-            );
-          });
+              setImages(
+                images.concat([
+                  {
+                    name: f.name,
+                    data: data,
+                  },
+                ]),
+              );
+            })
+            .catch((e: unknown) => {
+              console.log('error');
+            });
         };
         reader.readAsDataURL(f);
       });
