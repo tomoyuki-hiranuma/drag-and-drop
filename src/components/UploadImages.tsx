@@ -2,7 +2,6 @@ import { DragEvent, useState } from 'react';
 import { AspectRatio, Box, Flex } from '@chakra-ui/react';
 import { css } from '@emotion/react';
 import Image from 'next/image';
-import { off } from 'process';
 
 const styles = {
   input: css`
