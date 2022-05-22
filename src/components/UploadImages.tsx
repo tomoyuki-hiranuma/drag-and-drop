@@ -12,28 +12,44 @@ const styles = {
   `,
 };
 
+type ImageType = {
+  name: string;
+  data: string;
+};
+
 // refs: https://felixgerschau.com/react-typescript-ondrop-event-type/
 export const UploadImages = (): JSX.Element => {
-  const [images, setImages] = useState<File[]>([]);
+  const [images, setImages] = useState<ImageType[]>([]);
+  const MAX_WIDTH = 300;
+  const MAX_HEIGHT = 300;
+
+  const loadImage = (src: string) => {
+    return new Promise((resolve, reject) => {
+      let img = document.createElement('img');
+      img.src = src;
+      img.onload = () => {
+        resolve(img);
+      };
+      img.onerror = () => {
+        reject(img);
+      };
+    });
+  };
 
   const onDragEnter = (e: DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     e.stopPropagation();
-    console.log('drag enter');
   };
 
   const onDragOver = (e: DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     e.stopPropagation();
     e.dataTransfer.dropEffect = 'copy';
-
-    console.log('drag over');
   };
 
   const onDragLeave = (e: DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     e.stopPropagation();
-    console.log('drag leave');
   };
 
   const onDrop = (e: DragEvent<HTMLDivElement>) => {
@@ -45,9 +61,52 @@ export const UploadImages = (): JSX.Element => {
     if (files && files.length > 0) {
       const existingFiles = images.map((f) => f.name);
       files = files.filter((f) => !existingFiles.includes(f.name));
-      setImages(images.concat(files));
+      files.map((f) => {
+        const reader = new FileReader();
+        // ref: https://qiita.com/rch850/items/33d6933b3c73e112c5b6
+        reader.onload = (e: any) => {
+          const base64 = e.target.result;
+
+          // resize
+          let img = document.createElement('img');
+          img.src = base64;
+
+          loadImage(base64).then((res: any) => {
+            console.log(res);
+            let canvas = document.createElement('canvas');
+            let ctx = canvas.getContext('2d');
+            ctx?.drawImage(res, 0, 0);
+
+            let width = res.width;
+            let height = res.height;
+
+            if (width > height && width > MAX_WIDTH) {
+              height *= MAX_WIDTH / width;
+              width = MAX_WIDTH;
+            } else if (width <= height && height > MAX_HEIGHT) {
+              width *= MAX_HEIGHT / height;
+              height = MAX_HEIGHT;
+            }
+            canvas.height = height;
+            canvas.width = width;
+            ctx = canvas.getContext('2d');
+            ctx?.drawImage(res, 0, 0, width, height);
+
+            const data = canvas.toDataURL(f.type);
+
+            setImages(
+              images.concat([
+                {
+                  name: f.name,
+                  data: data,
+                },
+              ]),
+            );
+          });
+        };
+        reader.readAsDataURL(f);
+      });
     }
-    console.log('on drop');
   };
   return (
     <Flex
@@ -95,14 +154,10 @@ export const UploadImages = (): JSX.Element => {
       </Box>
       <Flex gap={`24px`}>
         {images.map((f) => {
+          console.log(f);
           return (
             <AspectRatio width={`100px`} ratio={4 / 3} key={`${f.name}`}>
-              <Image
-                alt={`${f.name}`}
-                src={URL.createObjectURL(f)}
-                layout={`fill`}
-                objectFit={`cover`}
-              />
+              <Image alt={`${f.name}`} src={f.data} layout={`fill`} objectFit={`cover`} />
             </AspectRatio>
           );
         })}
