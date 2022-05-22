@@ -67,18 +67,13 @@ export const UploadImages = (): JSX.Element => {
         reader.onload = (e: any) => {
           const base64 = e.target.result;
 
-          // resize
-          let img = document.createElement('img');
-          img.src = base64;
-
-          loadImage(base64).then((res: any) => {
-            console.log(res);
+          loadImage(base64).then((img: any) => {
             let canvas = document.createElement('canvas');
             let ctx = canvas.getContext('2d');
-            ctx?.drawImage(res, 0, 0);
+            ctx?.drawImage(img, 0, 0);
 
-            let width = res.width;
-            let height = res.height;
+            let width = img.width;
+            let height = img.height;
 
             if (width > height && width > MAX_WIDTH) {
               height *= MAX_WIDTH / width;
@@ -90,7 +85,7 @@ export const UploadImages = (): JSX.Element => {
             canvas.height = height;
             canvas.width = width;
             ctx = canvas.getContext('2d');
-            ctx?.drawImage(res, 0, 0, width, height);
+            ctx?.drawImage(img, 0, 0, width, height);
 
             const data = canvas.toDataURL(f.type);
 
@@ -154,7 +149,6 @@ export const UploadImages = (): JSX.Element => {
       </Box>
       <Flex gap={`24px`}>
         {images.map((f) => {
-          console.log(f);
           return (
             <AspectRatio width={`100px`} ratio={4 / 3} key={`${f.name}`}>
               <Image alt={`${f.name}`} src={f.data} layout={`fill`} objectFit={`cover`} />
