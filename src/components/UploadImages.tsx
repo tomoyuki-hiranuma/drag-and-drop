@@ -26,14 +26,14 @@ export const UploadImages = (): JSX.Element => {
   const allowedExtensions = new Array('jpg', 'jpeg', 'png');
 
   const getExtention = (filename: string) => {
-    var pos = filename.lastIndexOf('.');
-    if (pos === -1) return '';
-    return filename.slice(pos + 1);
+    const position = filename.lastIndexOf('.');
+    if (position === -1) return '';
+    return filename.slice(position + 1);
   };
 
   const allowedExtention = (filename: string) => {
-    let ext = getExtention(filename).toLowerCase();
-    if (allowedExtensions.indexOf(ext) === -1) return false;
+    const extention = getExtention(filename).toLowerCase();
+    if (allowedExtensions.indexOf(extention) === -1) return false;
     return true;
   };
 
