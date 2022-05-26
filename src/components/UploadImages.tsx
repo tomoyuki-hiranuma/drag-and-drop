@@ -22,6 +22,7 @@ export const UploadImages = (): JSX.Element => {
   const [images, setImages] = useState<ImageType[]>([]);
   const MAX_WIDTH = 300;
   const MAX_HEIGHT = 300;
+  const MAX_IMAGE_NUMBER = 5;
   const allowedExtensions = new Array('jpg', 'jpeg', 'png');
 
   const getExtention = (filename: string) => {
@@ -34,6 +35,10 @@ export const UploadImages = (): JSX.Element => {
     const extention = getExtention(filename).toLowerCase();
     if (allowedExtensions.indexOf(extention) === -1) return false;
     return true;
+  };
+
+  const isOverMaxLength = (currentFiles: ImageType[], newFiles: File[]): boolean => {
+    return currentFiles.length + newFiles.length > MAX_IMAGE_NUMBER;
   };
 
   const loadImage = (src: string) => {
@@ -71,10 +76,14 @@ export const UploadImages = (): JSX.Element => {
 
     let files = Array.from(e.dataTransfer.files);
 
+    if (images.length > MAX_IMAGE_NUMBER) return;
+
     if (files && files.length > 0) {
       const existingFiles = images.map((f) => f.name);
       files = files.filter((f) => !existingFiles.includes(f.name) && allowedExtention(f.name));
     }
+
+    if (isOverMaxLength(images, files)) return;
 
     if (files && files.length > 0) {
       files.map((f) => {
